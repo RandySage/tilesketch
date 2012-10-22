@@ -102,7 +102,7 @@ Sketcher.prototype.updateCanvasByLine = function (event) {
 		    Math.cos(angle)*(this.lastMousePoint.y-yCent);
 		this.context.beginPath();
 		this.context.moveTo( x0+xCent, y0+yCent );
-		this.context.lineTo( x1+yCent, y1+yCent );
+		this.context.lineTo( x1+xCent, y1+yCent );
 		this.context.stroke();
 	}
 
