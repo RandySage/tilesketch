@@ -11,6 +11,8 @@
 
 <script src="js/sketcher.js"></script>
 <script src="js/trigonometry.js"></script>
+<script src="js/base64.js" type="text/javascript"></script>
+<script src="js/canvas2image.js" type="text/javascript"></script>
 
 <!-- <link rel="stylesheet" href="assets/bootstrap.css" /> -->
 
@@ -40,8 +42,16 @@ $(document).ready(function(e) {
 		       size="1"
 		       value="16" />
             <a href="#">
-             <input type="button" class="btn error" value="clear"
+             <input type="button" class="btn error" value="Clear"
              	onclick="sketcher.clear();" />
+             </a>
+            <a href="#">
+             <input type="button" class="btn error" value="Save"
+             	onclick="sketcher.save();" />
+             </a>
+            <a href="#">
+             <input type="button" class="btn error" value="Export"
+             	onclick="sketcher.export();" />
              </a>
 		</form>
 

@@ -153,6 +153,37 @@ Sketcher.prototype.clear = function () {
 	this.context.clearRect( 0, 0, c.width, c.height );
 }
 			
+Sketcher.prototype.save = function () {
+
+    var oCanvas = document.getElementById("sketch");
+
+    bRes = Canvas2Image.saveAsPNG(oCanvas);
+
+    if (!bRes) {
+	alert("Sorry, this browser is not capable of saving " + strType + " files!");
+	return false;
+    }
+
+}
+
+Sketcher.prototype.export = function () {
+
+    var oCanvas = document.getElementById("sketch");
+
+     var oImg = Canvas2Image.saveAsPNG(oCanvas, true);
+     Canvas2Image.saveAsPNG(oCanvas, true);
+
+     if (!oImg) {
+     	alert("Sorry, this browser is not capable of saving " + strType + " files!");
+     	return false;
+     }
+
+     oImg.id = "canvasimage";
+
+     oImg.style.border = oCanvas.style.border;
+        oCanvas.parentNode.replaceChild(oImg, oCanvas);
+}
+			
 Sketcher.prototype.setNTiles = function (inputNTiles) {
     //alert(inputNTiles);
     this.nTiles = inputNTiles;
