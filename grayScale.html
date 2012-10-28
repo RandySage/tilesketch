@@ -24,6 +24,7 @@ var sketcher = null;
 $(document).ready(function(e) {
 	
 	sketcher = new Sketcher( "sketch", "grayScale" );
+        document.getElementsByName('nTiles')[0].value = sketcher.getNTiles();
 });
 
 </script>
@@ -35,12 +36,13 @@ $(document).ready(function(e) {
     <div class="topbar" data-dropdown="dropdown">
       <div class="topbar-inner">
         <div class="container">
-	      <form action="#" name="tileParams">
+	      <form name="tileParams"
+		    action="javascript: void(0);" >
 		Num Tiles: 
 		<input type=text name="nTiles" 
 		       onkeyup="sketcher.setNTiles(document.tileParams.nTiles.value)"
-		       size="1"
-		       value="16" />
+		       size="3"
+		       value="" />
             <a href="#">
              <input type="button" class="btn error" value="Clear"
              	onclick="sketcher.clear();" />

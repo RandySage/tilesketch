@@ -105,20 +105,53 @@ Sketcher.prototype.updateMousePosition = function (event) {
 
 }
 
-Sketcher.prototype.getColor0 = function ( i, m) {
-    var frequency = 2*Math.PI / m;
-    var offset = 128;
-    var amplitude = 127;
+Sketcher.prototype.getColor = function ( i, colorPeriod, colorType) {
+    var frequency;
+    var offset;
+    var amplitude;
 
-    var redOffset = 0;
-    var blueOffset = 3;
-    var greenOffset = 5;
+    var redOffset;
+    var blueOffset;
+    var greenOffset;
+    var red  ;
+    var green;
+    var blue ;
+    var colorString = "rgb(0, 0, 0)"; // Fall back to black
 
-    var red   = Math.round( Math.sin(this.redMult*frequency*i + redOffset) * amplitude + offset );
-    var green = Math.round( Math.sin(this.greenMult*frequency*i + greenOffset) * amplitude + offset );
-    var blue  = Math.round( Math.sin(this.blueMult*frequency*i + blueOffset) * amplitude + offset );
+    if (this.colorType == 'color0' ) {
+	frequency = 2*Math.PI / colorPeriod;
+	offset = 128;
+	amplitude = 127;
+
+	redOffset = 0;
+	blueOffset = 3;
+	greenOffset = 5;
+
+	red   = Math.round( Math.sin(this.redMult*frequency*i + redOffset) * amplitude + offset );
+	green = Math.round( Math.sin(this.greenMult*frequency*i + greenOffset) * amplitude + offset );
+	blue  = Math.round( Math.sin(this.blueMult*frequency*i + blueOffset) * amplitude + offset );
 	    
-    var colorString = "rgb(" + red + "," + green + "," + blue + ")";
+	colorString = "rgb(" + red + "," + green + "," + blue + ")";
+    }
+    else if (this.colorType == 'color1') {
+	frequency = 2*Math.PI / colorPeriod;
+	offset = 255*1.5 / 3;
+	amplitude = 255*1.5 / 2;
+
+	redOffset =   2*Math.PI * 0/3;
+	blueOffset =  2*Math.PI * 1/3;
+	greenOffset = 2*Math.PI * 2/3;
+
+	red   = Math.round( Math.sin(this.redMult*frequency*i + redOffset) * amplitude + offset );
+	green = Math.round( Math.sin(this.greenMult*frequency*i + greenOffset) * amplitude + offset );
+	blue  = Math.round( Math.sin(this.blueMult*frequency*i + blueOffset) * amplitude + offset );
+	    
+	red = (red > 0) ? red : 0;
+	green = (green > 0) ? green : 0;
+	blue = (blue > 0) ? blue : 0;
+
+	colorString = "rgb(" + red + "," + green + "," + blue + ")";
+    }
     return colorString;
 }
 
@@ -137,10 +170,19 @@ Sketcher.prototype.updateCanvasByLine = function (event) {
 		var colorVal = 255 - ((15*i) % 256);
 		this.context.strokeStyle = "rgb(" + colorVal + "," + colorVal + "," + colorVal + ")"
 	    } 
-	    else if (this.colorType == 'color0') {
-		this.colorFreq = 1.5 * Math.sqrt(this.nTiles);
+	    else if (this.colorType == 'color0' || this.colorType == 'color1') {
+		// This is a randomly selected function - fairly arbitrary
+		var colorPeriodInitial = 1.5 * Math.sqrt(this.nTiles);
 
-		strokeStyle = this.getColor0(i,this.colorFreq);
+		// However the value is selected, I want to enforce that there 
+		// is an integer number of cycles through the colors in order to
+		// achieve the desired look
+		var nColorCyclesInt = Math.round(this.nTiles / colorPeriodInitial);
+
+		// Need to re-calculate the period with the number of cycles
+		var colorPeriod = this.nTiles / nColorCyclesInt;
+
+		strokeStyle = this.getColor(i, colorPeriod, this.colorType);
 	    }
 
 		var angle = i*tileAngle;
@@ -217,5 +259,19 @@ Sketcher.prototype.export = function () {
 			
 Sketcher.prototype.setNTiles = function (inputNTiles) {
     //alert(inputNTiles);
-    this.nTiles = inputNTiles;
+    if (inputNTiles > 0){
+	this.nTiles = inputNTiles;
+    }
 }
+			
+Sketcher.prototype.getNTiles = function () {
+    return this.nTiles;
+}
+
+// function updateFormNTiles () {
+//     var inputId = document.getElementsByName('nTiles');
+//     var doesNotExistId = document.getElementsByName('presumablyThisDoesNotExist');
+//     if ( inputId != doesNotExistId ){
+// 	inputId.value = this.nTiles;
+//     } 
+// }
