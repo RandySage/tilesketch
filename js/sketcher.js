@@ -1,6 +1,7 @@
 function Sketcher( canvasID, colorType ) {
     this.renderFunction =  this.updateCanvasByLine;
     this.nTiles = 16;
+    this.maxNLines = 1000;
 
     // Used only for color0
     this.redMult = 1;
@@ -15,39 +16,44 @@ function Sketcher( canvasID, colorType ) {
 	this.colorType = 'grayScale';
 	this.nTiles = 160;
     } 
-    else if (colorType == 'color0') {
-	this.colorType = 'color0';
+    else if (colorType == 'color0' || 
+	     colorType == 'color1' || 
+	     colorType == 'color2' ) {
+	this.colorType = colorType;
 	this.nTiles = 160;
     }
     else{
 	// Default to blackWhite
 	this.colorType = 'blackWhite';
     }
-	this.touchSupported = Modernizr.touch;
-	this.canvasID = canvasID;
-	this.canvas = $("#"+canvasID);
-	//this.canvas.width = window.innerWidth;
-	//this.canvas.height = window.innerHeight;
+    this.touchSupported = Modernizr.touch;
+    this.canvasID = canvasID;
+    this.canvas = $("#"+canvasID);
+    //this.canvas.width = window.innerWidth;
+    //this.canvas.height = window.innerHeight;
     
-	this.context = this.canvas.get(0).getContext("2d");	
-	this.context.strokeStyle = "#000000";
-	this.context.lineWidth = 3;
-	this.lastMousePoint = {x:0, y:0};
-	this.prevLastMousePoint = {x:0, y:0};
+    this.context = this.canvas.get(0).getContext("2d");	
+    this.context.strokeStyle = "#000000";
+    this.context.lineWidth = 3;
+    this.lastMousePoint = {x:0, y:0};
+    this.prevLastMousePoint = {x:0, y:0};
 	
     
-	if (this.touchSupported) {
-		this.mouseDownEvent = "touchstart";
-		this.mouseMoveEvent = "touchmove";
-		this.mouseUpEvent = "touchend";
-	}
-	else {
-		this.mouseDownEvent = "mousedown";
-		this.mouseMoveEvent = "mousemove";
-		this.mouseUpEvent = "mouseup";
-	}
+    if (this.touchSupported) {
+	this.mouseDownEvent = "touchstart";
+	this.mouseMoveEvent = "touchmove";
+	this.mouseUpEvent = "touchend";
+    }
+    else {
+	this.mouseDownEvent = "mousedown";
+	this.mouseMoveEvent = "mousemove";
+	this.mouseUpEvent = "mouseup";
+    }
 	
-	this.canvas.bind( this.mouseDownEvent, this.onCanvasMouseDown() );
+    this.canvas.bind( this.mouseDownEvent, this.onCanvasMouseDown() );
+
+    //    this.canvas.onselectstart = function () { return false; } // ie
+    //    this.canvas.onmousedown = function () { return false; } // mozilla
 }
 
 Sketcher.prototype.onCanvasMouseDown = function () {
@@ -105,6 +111,32 @@ Sketcher.prototype.updateMousePosition = function (event) {
 
 }
 
+// Function that returns triangle wave with following characteristics (for period=6):
+//   - slopes from 0 to 1 as x goes from 0 to 1
+//   - constant 1 as x goes from 1 to 3
+//   - slopes from 1 to 0 as x goes from 3 to 4
+//   - constant 0 as x goes from 4 to 6
+//   - repeats for x < 0 or > 6 (input is modulus 6)
+Sketcher.prototype.clippedTriangleWave = function ( x, period ) {
+    var y;
+    var xModPeriod = x % period;
+    var xModPeriodNormalized = xModPeriod * 6 / period;
+
+    if ( xModPeriodNormalized >= 0 && xModPeriodNormalized < 1 ){
+	y = xModPeriodNormalized;
+    } else if ( xModPeriodNormalized >= 1 && xModPeriodNormalized < 3 ){ 
+	y = 1;
+    } else if ( xModPeriodNormalized >= 3 && xModPeriodNormalized < 4 ){ 
+	y = 1 - (xModPeriodNormalized-3);
+    } else if ( xModPeriodNormalized >= 4 && xModPeriodNormalized < 6 ){ 
+	y = 0;
+    } else {
+	y = 0;
+	console.log('Logic error in Sketcher.clippedTriangleWave()'); 
+    }
+    return y;
+}
+
 Sketcher.prototype.getColor = function ( i, colorPeriod, colorType) {
     var frequency;
     var offset;
@@ -124,8 +156,8 @@ Sketcher.prototype.getColor = function ( i, colorPeriod, colorType) {
 	amplitude = 127;
 
 	redOffset = 0;
-	blueOffset = 3;
 	greenOffset = 5;
+	blueOffset = 3;
 
 	red   = Math.round( Math.sin(this.redMult*frequency*i + redOffset) * amplitude + offset );
 	green = Math.round( Math.sin(this.greenMult*frequency*i + greenOffset) * amplitude + offset );
@@ -135,12 +167,12 @@ Sketcher.prototype.getColor = function ( i, colorPeriod, colorType) {
     }
     else if (this.colorType == 'color1') {
 	frequency = 2*Math.PI / colorPeriod;
-	offset = 255*1.5 / 3;
 	amplitude = 255*1.5 / 2;
+	offset = 255 - amplitude;
 
 	redOffset =   2*Math.PI * 0/3;
-	blueOffset =  2*Math.PI * 1/3;
 	greenOffset = 2*Math.PI * 2/3;
+	blueOffset =  2*Math.PI * 1/3;
 
 	red   = Math.round( Math.sin(this.redMult*frequency*i + redOffset) * amplitude + offset );
 	green = Math.round( Math.sin(this.greenMult*frequency*i + greenOffset) * amplitude + offset );
@@ -149,6 +181,17 @@ Sketcher.prototype.getColor = function ( i, colorPeriod, colorType) {
 	red = (red > 0) ? red : 0;
 	green = (green > 0) ? green : 0;
 	blue = (blue > 0) ? blue : 0;
+
+	colorString = "rgb(" + red + "," + green + "," + blue + ")";
+    } 
+    else if (this.colorType == 'color2') {
+	redOffset   = colorPeriod * 0/3;
+	greenOffset = colorPeriod * 1/3;
+	blueOffset  = colorPeriod * 2/3;
+
+	red   = Math.round( 255 * this.clippedTriangleWave(i+redOffset,   colorPeriod) );
+	green = Math.round( 255 * this.clippedTriangleWave(i+greenOffset, colorPeriod) );
+	blue  = Math.round( 255 * this.clippedTriangleWave(i+blueOffset,  colorPeriod) );
 
 	colorString = "rgb(" + red + "," + green + "," + blue + ")";
     }
@@ -170,7 +213,7 @@ Sketcher.prototype.updateCanvasByLine = function (event) {
 		var colorVal = 255 - ((15*i) % 256);
 		this.context.strokeStyle = "rgb(" + colorVal + "," + colorVal + "," + colorVal + ")"
 	    } 
-	    else if (this.colorType == 'color0' || this.colorType == 'color1') {
+	    else if (this.colorType.substring(0,5) == 'color') {
 		// This is a randomly selected function - fairly arbitrary
 		var colorPeriodInitial = 1.5 * Math.sqrt(this.nTiles);
 
@@ -185,20 +228,20 @@ Sketcher.prototype.updateCanvasByLine = function (event) {
 		strokeStyle = this.getColor(i, colorPeriod, this.colorType);
 	    }
 
-		var angle = i*tileAngle;
-		var x0 = Math.cos(angle)*(this.prevLastMousePoint.x-xCent) + 
-			-Math.sin(angle)*(this.prevLastMousePoint.y-yCent);
-		var y0 = Math.sin(angle)*(this.prevLastMousePoint.x-xCent) + 
-		    Math.cos(angle)*(this.prevLastMousePoint.y-yCent);
-		var x1 = Math.cos(angle)*(this.lastMousePoint.x-xCent) + 
-		    -Math.sin(angle)*(this.lastMousePoint.y-yCent);
-		var y1 = Math.sin(angle)*(this.lastMousePoint.x-xCent) + 
-		    Math.cos(angle)*(this.lastMousePoint.y-yCent);
-		this.context.beginPath();
-		this.context.moveTo( x0+xCent, y0+yCent );
-		this.context.lineTo( x1+xCent, y1+yCent );
-		this.context.strokeStyle = strokeStyle;
-		this.context.stroke();
+	    var angle = i*tileAngle;
+	    var x0 = Math.cos(angle)*(this.prevLastMousePoint.x-xCent) + 
+		-Math.sin(angle)*(this.prevLastMousePoint.y-yCent);
+	    var y0 = Math.sin(angle)*(this.prevLastMousePoint.x-xCent) + 
+		Math.cos(angle)*(this.prevLastMousePoint.y-yCent);
+	    var x1 = Math.cos(angle)*(this.lastMousePoint.x-xCent) + 
+		-Math.sin(angle)*(this.lastMousePoint.y-yCent);
+	    var y1 = Math.sin(angle)*(this.lastMousePoint.x-xCent) + 
+		Math.cos(angle)*(this.lastMousePoint.y-yCent);
+	    this.context.beginPath();
+	    this.context.moveTo( x0+xCent, y0+yCent );
+	    this.context.lineTo( x1+xCent, y1+yCent );
+	    this.context.strokeStyle = strokeStyle;
+	    this.context.stroke();
 	}
 
 	this.updateMousePosition( event );
@@ -258,8 +301,13 @@ Sketcher.prototype.export = function () {
 }
 			
 Sketcher.prototype.setNTiles = function (inputNTiles) {
-    //alert(inputNTiles);
+    //alert(this.maxNLines);
     if (inputNTiles > 0){
+	if (inputNTiles > this.maxNLines){
+	    alert(inputNTiles);
+    	    inputNTiles = this.maxNLines;
+	    alert(inputNTiles);
+	}
 	this.nTiles = inputNTiles;
     }
 }
@@ -267,11 +315,3 @@ Sketcher.prototype.setNTiles = function (inputNTiles) {
 Sketcher.prototype.getNTiles = function () {
     return this.nTiles;
 }
-
-// function updateFormNTiles () {
-//     var inputId = document.getElementsByName('nTiles');
-//     var doesNotExistId = document.getElementsByName('presumablyThisDoesNotExist');
-//     if ( inputId != doesNotExistId ){
-// 	inputId.value = this.nTiles;
-//     } 
-// }
