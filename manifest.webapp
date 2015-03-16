@@ -1,19 +1,16 @@
 {
   "name": "Sketch'N",
   "description": "Fun colorful sketches with a number (N) of lines",
-  "launch_path": "/tilesketch/index.html",
+  "launch_path": "/index.html",
   "icons": {
-    "30": "/tilesketch/images/icon-30.png",
-    "32": "/tilesketch/images/icon-32.png",
-    "60": "/tilesketch/images/icon-60.png",
-    "64": "/tilesketch/images/icon-64.png",
-    "128": "/tilesketch/images/icon-128.png",
-    "256": "/tilesketch/images/icon-256.png"
+    "30": "/icons/icon-30.png",
+    "32": "/icons/icon-32.png",
+    "60": "/icons/icon-60.png",
+    "64": "/icons/icon-64.png",
+    "128": "/icons/icon-128.png",
+    "256": "/icons/icon-256.png"
   },
-  "fullscreen": "true",
-  "developer": {
-    "name": "nullspace",
-    "url": "http://github.com/nullspace"
-  },
-  "default_locale": "en"
+  "type": "privileged",
+  "permissions": {
+  }
 }
