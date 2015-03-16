@@ -1,7 +1,7 @@
 {
   "name": "Sketch'N",
   "description": "Fun colorful sketches with a number (N) of lines",
-  "launch_path": "/index.html",
+  "launch_path": "/index.html?style=color0",
   "icons": {
     "30": "/icons/icon-30.png",
     "32": "/icons/icon-32.png",
@@ -10,7 +10,6 @@
     "128": "/icons/icon-128.png",
     "256": "/icons/icon-256.png"
   },
-  "type": "privileged",
   "permissions": {
   }
 }

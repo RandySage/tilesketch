@@ -14,17 +14,18 @@ function Sketcher( canvasID, colorType ) {
     } 
     else if (colorType == 'grayScale') {
 	this.colorType = 'grayScale';
-	this.nTiles = 160;
+	this.nTiles = 50;
     } 
     else if (colorType == 'color0' || 
 	     colorType == 'color1' || 
 	     colorType == 'color2' ) {
 	this.colorType = colorType;
-	this.nTiles = 160;
+	this.nTiles = 50;
     }
     else{
 	// Default to blackWhite
-	this.colorType = 'blackWhite';
+	this.colorType = 'color0';
+	this.nTiles = 13;
     }
     this.touchSupported = Modernizr.touch;
     this.canvasID = canvasID;
